@@ -8,6 +8,7 @@ function Navbar({ setIsSidebarOpen, setIsWalletOpen }) {
 
     return (
         <nav className="flex items-center justify-between bg-[#1A2C38] text-white px-4 py-2 h-[8vh] shadow-md w-full">
+            
             {/* Left: Sidebar toggle + Logo */}
             <div className="flex items-center gap-4">
                 <button
@@ -16,8 +17,16 @@ function Navbar({ setIsSidebarOpen, setIsWalletOpen }) {
                 >
                     <Menu className="h-6 w-6" />
                 </button>
+
                 <Link to={"/"}>
-                    <h1 className="text-lg sm:text-xl font-semibold whitespace-nowrap">GamBles</h1>
+                    <h1 className="text-xl sm:text-2xl font-extrabold whitespace-nowrap tracking-wide flex items-center">
+                        <span className="text-gray-200 drop-shadow-[2px_2px_0px_rgba(0,0,0,0.6)]">
+                            7
+                        </span>
+                        <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700 bg-clip-text text-transparent drop-shadow-[2px_2px_6px_rgba(0,0,0,0.9)]">
+                            XBET
+                        </span>
+                    </h1>
                 </Link>
             </div>
 
@@ -39,7 +48,7 @@ function Navbar({ setIsSidebarOpen, setIsWalletOpen }) {
                 </div>
             )}
 
-            {/*Wallet + Profile (if logged in) */}
+            {/* Wallet + Profile (if logged in) */}
             {user && (
                 <>
                     {/* Wallet Box */}
