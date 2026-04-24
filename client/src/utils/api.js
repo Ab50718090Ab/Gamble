@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL=https://your-backend-name.onrender.com
+    baseURL: import.meta.env.VITE_API_URL=https://gamble-9noh.onrender.com
     withCredentials: true,
 });
 
