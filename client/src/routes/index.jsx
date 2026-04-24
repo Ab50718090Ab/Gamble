@@ -48,8 +48,8 @@ const router = createBrowserRouter([
             { path: "deposit-money", element: <DepositMoney /> },
             { path: "withdraw-money", element: <WithdrawMoney /> },
             { path: "games", element: <Games /> },
-            { path: "games/:gameName", element: <MinesGame /> }
-            { path: "games/dice", element: <DiceGames /> }
+            { path: "games/:gameName", element: <MinesGame /> },
+            { path: "games/dice", element: <DiceGames /> },
         ],
     },
     { path: "verify-user", element: <VerifyEmail /> },
