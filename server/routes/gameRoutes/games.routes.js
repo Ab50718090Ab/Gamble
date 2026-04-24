@@ -1,16 +1,31 @@
 import { Router } from "express";
 import minesRoutes from "./mines.routes.js";
-import { 
-    getAllGames
-} from "../../controllers/gamesControllers/games.controller.js";
 import diceRoutes from "./dice.routes.js";
+import { getAllGames } from "../../controllers/gamesControllers/games.controller.js";
 
-const gamesRoutes = Router();
+const router = Router();
 
-gamesRoutes.get("/get-all-games", getAllGames)
+/**
+ * ✅ ROOT: /api/games
+ */
+router.get("/", (req, res) => {
+  res.json({
+    message: "Games API is working 🚀"
+  });
+});
 
-// Mount mines-related routes under /api/games/mines
-gamesRoutes.use("/mines", minesRoutes);
-gamesRoutes.use("/dice", diceRoutes);
+/**
+ * ✅ GET ALL GAMES
+ * /api/games/get-all-games
+ */
+router.get("/get-all-games", getAllGames);
 
-export default gamesRoutes;
+/**
+ * 🎮 Sub routes
+ * /api/games/mines
+ * /api/games/dice
+ */
+router.use("/mines", minesRoutes);
+router.use("/dice", diceRoutes);
+
+export default router;
