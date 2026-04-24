@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL=https://gamble-9noh.onrender.com
+    baseURL: import.meta.env.VITE_API_URL,
     withCredentials: true,
 });
 
@@ -10,7 +10,6 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Retry once on 401 Unauthorized
         if (
             error.response?.status === 401 &&
             !originalRequest._retry
@@ -18,10 +17,9 @@ api.interceptors.response.use(
             originalRequest._retry = true;
             try {
                 await api.post("/api/user/refresh-token");
-                return api(originalRequest); // Retry original request
+                return api(originalRequest);
             } catch (err) {
                 console.error("Token refresh failed:", err);
-                // Optional: redirect to login
             }
         }
 
