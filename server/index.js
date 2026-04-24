@@ -15,17 +15,25 @@ import gamesRoutes from "./routes/gameRoutes/games.routes.js";
 const app = express();
 const port = process.env.PORT || 3000;
 
+// =========================
 // DB connect
+// =========================
 connectDB();
+
+// =========================
+// TRUST PROXY (IMPORTANT for Render cookies)
+// =========================
+app.set("trust proxy", 1);
 
 // =========================
 // Middlewares
 // =========================
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // 🔥 added (safe)
 app.use(cookieParser());
 
 // =========================
-// CORS FIX (IMPORTANT)
+// CORS FIX (PRODUCTION SAFE)
 // =========================
 const allowedOrigins = [
   "http://localhost:5173",
@@ -35,7 +43,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow tools like Postman / server-to-server
+      // allow server-to-server / postman
       if (!origin) return callback(null, true);
 
       const cleanOrigin = origin.trim();
@@ -66,6 +74,17 @@ app.use("/api/games", gamesRoutes);
 // =========================
 app.get("/", (req, res) => {
   res.json({ message: "Backend is running 🚀" });
+});
+
+// =========================
+// GLOBAL ERROR HANDLER (IMPORTANT)
+// =========================
+app.use((err, req, res, next) => {
+  console.error("🔥 Server Error:", err.message);
+  res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
 });
 
 // =========================
