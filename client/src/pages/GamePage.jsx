@@ -5,15 +5,20 @@ import DiceGame from "./Games/DiceGame";
 const GamePage = () => {
   const { gameSlug } = useParams();
 
-  if (gameSlug === "mines") {
-    return <MinesGame />;
-  }
+  switch (gameSlug) {
+    case "mines-game":
+      return <MinesGame />;
 
-  if (gameSlug === "dice") {
-    return <DiceGame />;
-  }
+    case "dice-game":
+      return <DiceGame />;
 
-  return <h1 className="text-white text-center mt-10">Game Not Found</h1>;
+    default:
+      return (
+        <h1 className="text-white text-center mt-10">
+          Game Not Found
+        </h1>
+      );
+  }
 };
 
 export default GamePage;
