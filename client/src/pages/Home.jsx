@@ -97,7 +97,7 @@ export default function Home() {
                 {games.map((game) => (
                   <Link
                     key={game._id}
-                    to={`/games/${game.name}`}
+                    to={`/games/${game.name.replace(/\s+/g, "-")}`}
                     state={{ gameId: game._id }}
                     className="bg-[#0F212E] p-2 rounded-xl hover:scale-105 transition"
                   >
