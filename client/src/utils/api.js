@@ -5,33 +5,23 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// 🔥 FIXED INTERCEPTOR
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
 
-        // only handle 401 once
+        // Retry once on 401 Unauthorized
         if (
             error.response?.status === 401 &&
             !originalRequest._retry
         ) {
             originalRequest._retry = true;
-
             try {
-                // 🔥 FIX: ensure cookie-based refresh works properly
                 await api.post("/api/user/refresh-token");
-
-                // retry original request after refresh
-                return api(originalRequest);
-
+                return api(originalRequest); // Retry original request
             } catch (err) {
                 console.error("Token refresh failed:", err);
-
-                // optional: force logout cleanup
-                localStorage.removeItem("user");
-
-                window.location.href = "/login";
+                // Optional: redirect to login
             }
         }
 
