@@ -1,56 +1,32 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "../App.jsx";
+import axios from "axios";
 
-// Pages
-import Home from "../pages/Home.jsx";
-import Games from "../pages/Games.jsx";
-import GamePage from "../pages/GamePage.jsx";
+const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    withCredentials: true,
+});
 
-import Profile from "../pages/Profile.jsx";
-import Dashboard from "../pages/Dashboard.jsx";
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
 
-import DepositMoney from "../pages/DepositMoney.jsx";
-import WithdrawMoney from "../pages/WithdrawMoney.jsx";
+        // Retry once on 401 Unauthorized
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry
+        ) {
+            originalRequest._retry = true;
+            try {
+                await api.post("/api/user/refresh-token");
+                return api(originalRequest); // Retry original request
+            } catch (err) {
+                console.error("Token refresh failed:", err);
+                // Optional: redirect to login
+            }
+        }
 
-import ForgotPassword from "../pages/ForgotPassword.jsx";
-import VerifyResetPasswordOTP from "../pages/VerifyResetPasswordOTP.jsx";
-import SetNewPassword from "../pages/SetNewPassword.jsx";
+        return Promise.reject(error);
+    }
+);
 
-import RegisterPage from "../pages/RegisterPage.jsx";
-import LoginPage from "../pages/LoginPage.jsx";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-    children: [
-      // ✅ Home
-      { index: true, element: <Home /> },
-
-      // ✅ Games
-      { path: "games", element: <Games /> },
-
-      // ✅ Dynamic Game Route (IMPORTANT)
-      { path: "games/:gameSlug", element: <GamePage /> },
-
-      // ✅ User pages
-      { path: "profile", element: <Profile /> },
-      { path: "dashboard", element: <Dashboard /> },
-
-      // ✅ Wallet pages
-      { path: "deposit-money", element: <DepositMoney /> },
-      { path: "withdraw-money", element: <WithdrawMoney /> },
-
-      // ✅ Auth recovery
-      { path: "forgot-password", element: <ForgotPassword /> },
-      { path: "verify-forgot-password-otp", element: <VerifyResetPasswordOTP /> },
-      { path: "set-new-password", element: <SetNewPassword /> },
-    ],
-  },
-
-  // ✅ Auth routes (outside layout)
-  { path: "register", element: <RegisterPage /> },
-  { path: "login", element: <LoginPage /> },
-]);
-
-export default router;
+export default api;
