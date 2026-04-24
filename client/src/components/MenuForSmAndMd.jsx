@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import api from "../utils/api";
 import toast from "react-hot-toast";
+import { FaUserClock } from "react-icons/fa";
 
 function MenuForSmAndMd({ isOpen, setIsOpen }) {
     const { user, setUser } = useUser();
