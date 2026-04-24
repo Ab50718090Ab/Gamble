@@ -1,11 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "../App.jsx";
-import Home from "../pages/Home.jsx";
-import Games from "@/pages/Games.jsx";
-import GamePage from "@/pages/GamePage.jsx"; // ✅ NEW
-
-import MinesGame from "@/pages/Games/MinesGame.jsx";
-import DiceGame from "@/pages/Games/DiceGame.jsx";
+import GamePage from "@/pages/GamePage.jsx"; // MUST ADD
 
 const router = createBrowserRouter([
   {
@@ -14,12 +7,25 @@ const router = createBrowserRouter([
     children: [
       { path: "", element: <Home /> },
 
+      { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-forgot-password-otp", element: <VerifyResetPasswordOTP /> },
+      { path: "set-new-password", element: <SetNewPassword /> },
+
+      { path: "profile", element: <Profile /> },
+      { path: "dashboard", element: <Dashboard /> },
+
+      { path: "deposit-money", element: <DepositMoney /> },
+      { path: "withdraw-money", element: <WithdrawMoney /> },
+
       { path: "games", element: <Games /> },
 
-      // ✅ Dynamic route
+      // ✅ dynamic route
       { path: "games/:gameSlug", element: <GamePage /> },
     ],
   },
+
+  { path: "register", element: <RegisterPage /> },
+  { path: "login", element: <LoginPage /> },
 ]);
 
 export default router;
