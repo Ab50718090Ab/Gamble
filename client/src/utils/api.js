@@ -1,72 +1,56 @@
-import axios from "axios";
+import { createBrowserRouter } from "react-router-dom";
+import App from "../App.jsx";
 
-// Axios instance
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
-  timeout: 15000,
-});
+// Pages
+import Home from "../pages/Home.jsx";
+import Games from "../pages/Games.jsx";
+import GamePage from "../pages/GamePage.jsx";
 
-// ==========================
-// Request Interceptor
-// ==========================
-api.interceptors.request.use(
-  (config) => {
-    // 👉 Future: token header add করতে পারো
-    // const token = localStorage.getItem("token");
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+import Profile from "../pages/Profile.jsx";
+import Dashboard from "../pages/Dashboard.jsx";
 
-    return config;
+import DepositMoney from "../pages/DepositMoney.jsx";
+import WithdrawMoney from "../pages/WithdrawMoney.jsx";
+
+import ForgotPassword from "../pages/ForgotPassword.jsx";
+import VerifyResetPasswordOTP from "../pages/VerifyResetPasswordOTP.jsx";
+import SetNewPassword from "../pages/SetNewPassword.jsx";
+
+import RegisterPage from "../pages/RegisterPage.jsx";
+import LoginPage from "../pages/LoginPage.jsx";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      // ✅ Home
+      { index: true, element: <Home /> },
+
+      // ✅ Games
+      { path: "games", element: <Games /> },
+
+      // ✅ Dynamic Game Route (IMPORTANT)
+      { path: "games/:gameSlug", element: <GamePage /> },
+
+      // ✅ User pages
+      { path: "profile", element: <Profile /> },
+      { path: "dashboard", element: <Dashboard /> },
+
+      // ✅ Wallet pages
+      { path: "deposit-money", element: <DepositMoney /> },
+      { path: "withdraw-money", element: <WithdrawMoney /> },
+
+      // ✅ Auth recovery
+      { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-forgot-password-otp", element: <VerifyResetPasswordOTP /> },
+      { path: "set-new-password", element: <SetNewPassword /> },
+    ],
   },
-  (error) => Promise.reject(error)
-);
 
-// ==========================
-// Response Interceptor
-// ==========================
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  // ✅ Auth routes (outside layout)
+  { path: "register", element: <RegisterPage /> },
+  { path: "login", element: <LoginPage /> },
+]);
 
-    // 🔍 Auth routes check (IMPORTANT)
-    const isAuthRoute =
-      originalRequest?.url?.includes("/login") ||
-      originalRequest?.url?.includes("/register") ||
-      originalRequest?.url?.includes("/refresh-token");
-
-    // 🔥 Handle 401 (Token Expired)
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !isAuthRoute
-    ) {
-      originalRequest._retry = true;
-
-      try {
-        console.log("🔄 Refreshing token...");
-
-        await api.post("/api/user/refresh-token");
-
-        console.log("✅ Token refreshed");
-
-        // 🔁 Retry original request
-        return api(originalRequest);
-      } catch (refreshError) {
-        console.error("❌ Token refresh failed:", refreshError);
-
-        // 👉 Optional: logout redirect
-        // window.location.href = "/login";
-
-        return Promise.reject(refreshError);
-      }
-    }
-
-    // ❌ Other errors
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+export default router;
