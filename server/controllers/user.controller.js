@@ -13,8 +13,8 @@ import mongoose from "mongoose";
 import betModel from "../models/bet.model.js";
 
 // We are using middelware before this to check Au
-SECRET_KEY_ACCESS_TOKEN=your_secret
-SECRET_KEY_REFRESH_TOKEN=your_refresh_secret
+const SECRET_KEY = process.env.JWT_SECRET;
+const REFRESH_KEY = process.env.REFRESH_TOKEN_SECRET;
 
 //register new user 
 export const registerController = async (req, res) => {
