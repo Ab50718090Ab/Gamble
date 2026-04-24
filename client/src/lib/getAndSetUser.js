@@ -6,11 +6,11 @@ export const useUserFetcher = () => {
 
     const getAndSetUser = async () => {
         try {
-            const res = await api.get("/api/user/my-details");
-
+            const res = await api.get("/api/user/my-details", {
+                withCredentials: true,
+            });
             setUser(res.data.data);
             return res.data.data;
-
         } catch (err) {
             console.error("Failed to fetch user:", err);
             setUser(null);
