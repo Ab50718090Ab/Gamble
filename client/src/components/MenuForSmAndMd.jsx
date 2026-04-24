@@ -116,8 +116,7 @@ function MenuForSmAndMd({ isOpen, setIsOpen }) {
                                 <button
                                     onClick={() => navigate("/verify-user")}
                                     className="bg-[#1447E6] w-full flex items-center justify-start px-4 py-2 rounded text-white cursor-pointer gap-2"
-                                >
-                                    <FaUserClock size={20} />
+                                     <FaUserClock size={20} />
                                     <span className="font-medium">Verify Account</span>
                                 </button>
                             )
