@@ -13,7 +13,7 @@ import mongoose from "mongoose";
 import betModel from "../models/bet.model.js";
 
 // We are using middelware before this to check Au
-const SECRET_KEY = process.env.SECRET_KEY_ACCESS_TOKEN;
+const ACCESS_KEY = process.env.SECRET_KEY_ACCESS_TOKEN;
 const REFRESH_KEY = process.env.SECRET_KEY_REFRESH_TOKEN;
 
 //register new user 
