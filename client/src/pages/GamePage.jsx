@@ -1,23 +1,28 @@
-import { useParams } from "react-router-dom";
-import MinesGame from "./Games/MinesGame";
-import DiceGame from "./Games/DiceGame";
+import GamePage from "../pages/GamePage.jsx";
 
-const GamePage = () => {
-  const { gameSlug } = useParams();
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      { index: true, element: <Home /> },
 
-  if (gameSlug === "mines-game") {
-    return <MinesGame />;
-  }
+      { path: "games", element: <Games /> },
+      { path: "games/:gameSlug", element: <GamePage /> },
 
-  if (gameSlug === "dice-game") {
-    return <DiceGame />;
-  }
+      { path: "profile", element: <Profile /> },
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "deposit-money", element: <DepositMoney /> },
+      { path: "withdraw-money", element: <WithdrawMoney /> },
 
-  return (
-    <h1 className="text-white text-center mt-10">
-      Game Not Found
-    </h1>
-  );
-};
+      { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-forgot-password-otp", element: <VerifyResetPasswordOTP /> },
+      { path: "set-new-password", element: <SetNewPassword /> },
+    ],
+  },
 
-export default GamePage;
+  { path: "register", element: <RegisterPage /> },
+  { path: "login", element: <LoginPage /> },
+]);
+
+export default router;
