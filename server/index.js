@@ -17,7 +17,7 @@ connectDB()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "https://gamble-1-6bq6.onrender.com",
     credentials: true
 }))
 
