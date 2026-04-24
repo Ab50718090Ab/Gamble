@@ -1,311 +1,272 @@
-import { comparePasswords, hashPassword } from "../utils/passwordHash.js";
-import userModel from "../models/user.model.js";
-import transporter from "../config/nodemailer.js";
-import generateVerificationToken from "../utils/generateVerificationToken.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/generateJwtTokens.js";
-import jwt from "jsonwebtoken";
-import { generateOTP } from "../utils/generateOTP.js";
-import verifyEmail from "../email/verifyEmail.js";
-import resetPassOTPEmail from "../email/resetPasswordOTPEmail.js";
-import { accessCookieOptions, refreshCookieOptions } from "../utils/cookieOptions.js";
-import transactionModel from "../models/transaction.model.js";
-import mongoose from "mongoose";
-import betModel from "../models/bet.model.js";
+import userModel from "../../models/user.model.js";
+import betModel from "../../models/bet.model.js";
+import gameModel from "../../models/game.model.js";
+import { getMinesMultiplier } from "../../utils/getMultipliers.js";
 
-// =========================
-// ENV KEYS (FIXED)
-// =========================
-const ACCESS_KEY = process.env.SECRET_KEY_ACCESS_TOKEN;
-const REFRESH_KEY = process.env.SECRET_KEY_REFRESH_TOKEN;
+// ============================
+// START MINES GAME
+// ============================
+export const startMinesGame = async (req, res) => {
+    const { amount, minesCount } = req.body;
+    const userId = req.user?.id;
 
-// =========================
-// REGISTER
-// =========================
-export const registerController = async (req, res) => {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
+    if (!amount || amount <= 0 || minesCount < 1 || minesCount > 24) {
         return res.status(400).json({
             success: false,
-            message: "All fields are required."
+            message: "Invalid bet or mines count"
         });
     }
 
     try {
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "User already exists."
-            });
-        }
-
-        const hashedPassword = await hashPassword(password);
-        const verificationToken = generateVerificationToken();
-
-        const newUser = new userModel({
-            name,
-            email,
-            password: hashedPassword,
-            provider: "local",
-            isVerified: false,
-            verificationToken,
-            verificationTokenExpiration: Date.now() + 3600000
-        });
-
-        const savedUser = await newUser.save();
-
-        const verifyLink = `${process.env.CLIENT_URL}/verify-user?token=${verificationToken}`;
-
-        await transporter.sendMail({
-            from: process.env.SENDER_EMAIL,
-            to: email,
-            subject: "Verify your email - Auth Template",
-            html: verifyEmail(name, verifyLink)
-        });
-
-        const accessToken = generateAccessToken(savedUser);
-        const refreshToken = generateRefreshToken(savedUser);
-
-        res.cookie("accessToken", accessToken, accessCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
-
-        return res.status(201).json({
-            message: "User registered. Please check your email.",
-            success: true
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-// =========================
-// VERIFY USER
-// =========================
-export const verifyUserController = async (req, res) => {
-    const { token } = req.params;
-
-    if (!token) {
-        return res.status(400).json({
-            success: false,
-            message: "Verification token is missing."
-        });
-    }
-
-    try {
-        const user = await userModel.findOne({ verificationToken: token });
+        const user = await userModel.findById(userId);
 
         if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid token."
-            });
-        }
-
-        if (user.isVerified) {
-            return res.status(400).json({
-                success: false,
-                message: "Already verified."
-            });
-        }
-
-        if (user.verificationTokenExpiration < Date.now()) {
-            return res.status(400).json({
-                success: false,
-                message: "Token expired."
-            });
-        }
-
-        user.isVerified = true;
-        user.verificationToken = undefined;
-        user.verificationTokenExpiration = undefined;
-        await user.save();
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-
-        res.cookie("accessToken", accessToken, accessCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
-
-        return res.status(200).json({
-            success: true,
-            message: "Account verified successfully."
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-// =========================
-// LOGIN
-// =========================
-export const loginController = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields required."
-            });
-        }
-
-        const user = await userModel.findOne({ email });
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "User not found."
-            });
-        }
-
-        const isMatch = await comparePasswords(password, user.password);
-
-        if (!isMatch) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials."
-            });
-        }
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-
-        res.cookie("accessToken", accessToken, accessCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
-
-        return res.status(200).json({
-            success: true,
-            message: "Login successful",
-            data: { user }
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-// =========================
-// LOGOUT
-// =========================
-export const logoutController = async (req, res) => {
-    try {
-        res.clearCookie("accessToken", accessCookieOptions);
-        res.clearCookie("refreshToken", refreshCookieOptions);
-
-        return res.status(200).json({
-            success: true,
-            message: "Logged out"
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-// =========================
-// REFRESH TOKEN (FIXED - MAIN BUG FIX)
-// =========================
-export const refreshTokenController = async (req, res) => {
-    const incomingRefreshToken =
-        req.cookies.refreshToken || req.body.refreshToken;
-
-    if (!incomingRefreshToken) {
-        return res.status(401).json({
-            success: false,
-            message: "Refresh token missing"
-        });
-    }
-
-    try {
-        const decoded = jwt.verify(incomingRefreshToken, REFRESH_KEY);
-
-        const user = await userModel.findById(decoded.id);
-
-        if (!user) {
-            return res.status(401).json({
+            return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-        const newAccessToken = jwt.sign(
-            { id: user._id, email: user.email },
-            ACCESS_KEY,
-            { expiresIn: "15m" }
-        );
+        if (user.wallet < amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Insufficient balance"
+            });
+        }
 
-        res.cookie("accessToken", newAccessToken, accessCookieOptions);
+        // deduct wallet safely
+        user.wallet = Number(user.wallet) - Number(amount);
+        await user.save();
 
-        return res.status(200).json({
-            success: true,
-            accessToken: newAccessToken
+        const game = await gameModel.findOne({ name: "mines" });
+
+        if (!game) {
+            return res.status(404).json({
+                success: false,
+                message: "Game not found"
+            });
+        }
+
+        const newBet = await betModel.create({
+            user: userId,
+            game: game._id,
+            betAmount: amount,
+            gameData: {
+                mineCount: minesCount,
+                game: "mines",
+                revealedTiles: [],
+                mineHits: 0,
+                safeHits: 0
+            },
+            status: "pending",
         });
 
-    } catch (error) {
-        return res.status(401).json({
+        return res.status(201).json({
+            success: true,
+            message: "Game started",
+            bet: newBet._id,
+            wallet: user.wallet
+        });
+
+    } catch (err) {
+        console.error("startMinesGame error:", err);
+        return res.status(500).json({
             success: false,
-            message: "Invalid refresh token",
-            error: error.message
+            message: "Failed to start game"
         });
     }
 };
 
-// =========================
-// IS AUTH
-// =========================
-export const isAuthenticated = async (req, res) => {
-    const accessToken = req.cookies?.accessToken;
-    const refreshToken = req.cookies?.refreshToken;
+// ============================
+// REVEAL TILE
+// ============================
+export const revealTile = async (req, res) => {
+    const { betId, tileIndex } = req.body;
+    const userId = req.user?.id;
 
-    if (!accessToken && !refreshToken) {
-        return res.status(401).json({
+    try {
+        const bet = await betModel.findById(betId);
+
+        if (!bet || bet.user.toString() !== userId || bet.status !== "pending") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid bet or already ended"
+            });
+        }
+
+        if (bet.gameData.revealedTiles.includes(tileIndex)) {
+            return res.status(400).json({
+                success: false,
+                message: "Tile already revealed"
+            });
+        }
+
+        const totalTiles = 25;
+        const revealed = bet.gameData.revealedTiles.length;
+        const remainingTiles = totalTiles - revealed;
+        const remainingMines = bet.gameData.mineCount - (bet.gameData.mineHits || 0);
+
+        const chanceOfMine = remainingMines / remainingTiles;
+
+        const houseEdge = 0.99;
+        const isMine = Math.random() <= (chanceOfMine * (1 / houseEdge));
+
+        bet.gameData.revealedTiles.push(tileIndex);
+
+        if (isMine) {
+            bet.gameData.mineHits += 1;
+        } else {
+            bet.gameData.safeHits += 1;
+        }
+
+        bet.markModified("gameData");
+        await bet.save();
+
+        let winStatus = null;
+        let multiplier = 1;
+        let profit = 0;
+
+        if (!isMine) {
+            multiplier = getMinesMultiplier(
+                bet.gameData.safeHits,
+                bet.gameData.mineCount
+            );
+
+            profit = Number((bet.betAmount * multiplier).toFixed(2));
+
+            if (bet.gameData.safeHits === totalTiles - bet.gameData.mineCount) {
+                winStatus = "win";
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Tile revealed",
+            isMine,
+            revealedTiles: bet.gameData.revealedTiles,
+            status: winStatus,
+            multiplier,
+            profit,
+        });
+
+    } catch (err) {
+        console.error("revealTile error:", err);
+        return res.status(500).json({
             success: false,
-            message: "No tokens"
+            message: "Reveal failed"
         });
     }
+};
+
+// ============================
+// END GAME
+// ============================
+export const endMinesGame = async (req, res) => {
+    const { betId } = req.body;
+    const userId = req.user?.id;
 
     try {
-        if (accessToken) {
-            const decoded = jwt.verify(accessToken, ACCESS_KEY);
-            return res.status(200).json({
-                success: true,
-                data: decoded
+        const bet = await betModel.findById(betId);
+
+        if (!bet || bet.user.toString() !== userId || bet.status !== "pending") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or finished game"
             });
         }
-    } catch {}
 
-    try {
-        if (refreshToken) {
-            const decoded = jwt.verify(refreshToken, REFRESH_KEY);
+        const user = await userModel.findById(userId);
 
-            const newAccessToken = generateAccessToken(decoded);
+        const { safeHits, mineHits, mineCount } = bet.gameData;
 
-            res.cookie("accessToken", newAccessToken, accessCookieOptions);
+        let winAmount = 0;
+        let isWin = false;
 
-            return res.status(200).json({
-                success: true,
-                data: decoded,
-                refreshed: true
-            });
+        if (!mineHits || mineHits === 0) {
+            const multiplier = getMinesMultiplier(safeHits, mineCount);
+
+            winAmount = Number((bet.betAmount * multiplier).toFixed(2));
+
+            user.wallet = Number(user.wallet) + winAmount;
+            await user.save();
+
+            isWin = true;
         }
-    } catch (error) {
-        return res.status(401).json({
+
+        bet.status = "completed";
+        bet.isWin = isWin;
+        bet.winAmount = winAmount;
+
+        await bet.save();
+
+        const populatedBet = await betModel
+            .findById(bet._id)
+            .populate("game", "displayName");
+
+        return res.status(200).json({
+            success: true,
+            message: "Game ended",
+            wallet: user.wallet,
+            bet: populatedBet
+        });
+
+    } catch (err) {
+        console.error("endMinesGame error:", err);
+        return res.status(500).json({
             success: false,
-            message: "Invalid tokens"
+            message: "Error ending game"
+        });
+    }
+};
+
+// ============================
+// GET PENDING GAME
+// ============================
+export const getPendingGame = async (req, res) => {
+    const userId = req.user?.id;
+
+    try {
+        const game = await gameModel.findOne({ name: "mines" });
+
+        if (!game) {
+            return res.status(404).json({
+                success: false,
+                message: "Game not found"
+            });
+        }
+
+        const pendingGame = await betModel.findOne({
+            user: userId,
+            game: game._id,
+            status: "pending",
+        });
+
+        if (!pendingGame) {
+            return res.status(200).json({
+                success: true,
+                message: "No pending game",
+                bet: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Pending game found",
+            bet: {
+                _id: pendingGame._id,
+                betAmount: pendingGame.betAmount,
+                gameData: {
+                    mineCount: pendingGame.gameData.mineCount,
+                    revealedTiles: pendingGame.gameData.revealedTiles,
+                },
+            },
+        });
+
+    } catch (err) {
+        console.error("getPendingGame error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Error getting pending game"
         });
     }
 };
