@@ -1,18 +1,17 @@
-// config/cookieOptions.js
-const isProd = process.env.NODE_ENV === "production";
+const isProd = true; // FORCE TRUE on Render
 
 export const accessCookieOptions = {
     httpOnly: true,
-    secure: isProd, // Only send cookie over HTTPS in production
-    sameSite: isProd ? "None" : "Lax", // For cross-site cookies
+    secure: true,
+    sameSite: "None",
     path: "/",
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 15 * 60 * 1000,
 };
 
 export const refreshCookieOptions = {
     httpOnly: true,
-    secure: isProd, // Only send cookie over HTTPS in production
-    sameSite: isProd ? "None" : "Lax", // For cross-site cookies
+    secure: true,
+    sameSite: "None",
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
 };
