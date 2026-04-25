@@ -36,7 +36,7 @@ const Games = () => {
                     {games.map((game) => (
                         <Link
                             key={game._id}
-                            to={`/games/${game.name.toLowerCase()}`}
+                            to={`/games/${game.slug}`}
                             state={{ gameId: game._id }}
                             className="transition-transform hover:scale-105"
                         >
