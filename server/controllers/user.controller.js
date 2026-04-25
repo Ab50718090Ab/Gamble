@@ -385,56 +385,65 @@ export const isAuthenticated = async (req, res) => {
 };
 
 //refresh access token if access token is expired
-export const refreshTokenController = async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
-
-    if (!incomingRefreshToken) {
-        return res.status(401).json({
-            success: false,
-            message: "Refresh Token not found",
-        });
-    }
-
-    try {
-        const decodedToken = jwt.verify(
-            incomingRefreshToken,
-            process.env.SECRET_KEY_REFRESH_TOKEN
-        );
-        // console.log(decodedToken)
-        const user = await userModel.findById(decodedToken?.id);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid refresh token.",
-            });
-        }
-
-        // Generate new access token
-        const newAccessToken = jwt.sign(
-            { id: user._id, email: user.email },
-            process.env.SECRET_KEY_ACCESS_TOKEN,
-            { expiresIn: "15m" }
-        );
-
-        // Set new access token in cookies
-        res.cookie("accessToken", newAccessToken, accessCookieOptions);
-
-        return res.status(200).json({
-            success: true,
-            message: "Access token refreshed",
-            accessToken: newAccessToken,
-        });
-
-    } catch (error) {
-        console.error("Error in refreshing token:", error.message);
-
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired refresh token",
-            error: error.message,
-        });
-    }
+export const refreshTokenController = async (req, res) => {  
+    const incomingRefreshToken =  
+        req.cookies?.refreshToken || req.body?.refreshToken;  
+  
+    if (!incomingRefreshToken) {  
+        return res.status(401).json({  
+            success: false,  
+            message: "Refresh Token not found in cookies or body",  
+        });  
+    }  
+  
+    try {  
+        const decodedToken = jwt.verify(  
+            incomingRefreshToken,  
+            process.env.SECRET_KEY_REFRESH_TOKEN  
+        );  
+  
+        if (!decodedToken?.id) {  
+            return res.status(401).json({  
+                success: false,  
+                message: "Invalid refresh token payload",  
+            });  
+        }  
+  
+        const user = await userModel.findById(decodedToken.id);  
+  
+        if (!user) {  
+            return res.status(401).json({  
+                success: false,  
+                message: "User not found for this refresh token",  
+            });  
+        }  
+  
+        const newAccessToken = jwt.sign(  
+            {  
+                id: user._id,  
+                email: user.email,  
+            },  
+            process.env.SECRET_KEY_ACCESS_TOKEN,  
+            { expiresIn: "15m" }  
+        );  
+  
+        res.cookie("accessToken", newAccessToken, accessCookieOptions);  
+  
+        return res.status(200).json({  
+            success: true,  
+            message: "Access token refreshed successfully",  
+            accessToken: newAccessToken,  
+        });  
+  
+    } catch (error) {  
+        console.error("Refresh Token Error:", error.message);  
+  
+        return res.status(401).json({  
+            success: false,  
+            message: "Invalid or expired refresh token",  
+            error: error.message,  
+        });  
+    }  
 };
 
 //send reset password otp to mail
