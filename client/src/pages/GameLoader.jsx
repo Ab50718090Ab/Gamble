@@ -5,11 +5,11 @@ import DiceGame from "./Games/DiceGame";
 export default function GameLoader() {
     const { gameName } = useParams();
 
-    switch (gameName.toLowerCase()) {
+    switch (gameName) {
         case "mines":
             return <MinesGame />;
 
-        case "dice":
+        case "dice-game":
             return <DiceGame />;
 
         default:
