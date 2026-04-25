@@ -1,4 +1,3 @@
-// MinesGame.jsx (refactored - FIXED PRODUCTION VERSION)
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import api from "@/utils/api";
