@@ -10,8 +10,8 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 
 const MinesGame = () => {
 
-    const location = useLocation();
-    const { gameId } = location.state || {};
+        const { state } = useLocation();
+        const gameId = state?.gameId;
 
     // console.log(gameId)
 
