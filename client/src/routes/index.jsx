@@ -16,6 +16,7 @@ import Games from "@/pages/Games.jsx";
 import MinesGame from "@/pages/Games/MinesGame.jsx";
 import Dashboard from "@/pages/Dashboard.jsx";
 import DiceGame from "@/pages/Games/DiceGame.jsx";
+import GameLoader from "@/pages/GameLoader.jsx";
 
 const router = createBrowserRouter([
     {
